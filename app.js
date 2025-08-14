@@ -2,30 +2,27 @@ function tirarDado() {
     return Math.floor(Math.random() * 6) + 1;
 }
 
-class Jugador {
-    constructor(nombre, personaje) {
+class Personaje {
+    constructor(nombre) {
         this.nombre = nombre;
-        this.personaje = personaje;
         this.posicion = 0;
         this.vidas = 3;
-        this.capa = true; 
+        this.capa = true;
     }
 
     perderVida() {
         if (this.capa) {
             console.log(`${this.nombre}, la capa te salvó pero se rompió.`);
-            this.capa = false; 
+            this.capa = false;
         } else {
             this.vidas--;
             console.log(`${this.nombre}, perdiste una vida. Te quedan ${this.vidas}.`);
 
-            
             if (this.vidas === 1) {
                 console.log(`${this.nombre}, te queda 1 sola vida. Probá suerte.`);
                 const eleccion = parseInt(prompt("Elegí un número del 1 al 6: "));
                 const dado = tirarDado();
                 console.log(`Salió: ${dado}`);
-
                 if (dado === eleccion) {
                     this.vidas = 3;
                     console.log(`¡Zafaste! Tenés las 3 vidas de nuevo.`);
@@ -34,7 +31,6 @@ class Jugador {
                 }
             }
 
-            
             if (this.vidas <= 0) {
                 console.log(`${this.nombre} quedó fuera. Vuelve al inicio con 3 vidas y capa nueva.`);
                 this.posicion = 0;
@@ -42,6 +38,24 @@ class Jugador {
                 this.capa = true;
             }
         }
+    }
+
+    puedePasar(casilla) {
+        return true;
+    }
+}
+
+class Mago extends Personaje {
+    puedePasar(casilla) {
+        if (casilla === "fuego") return true;
+        return false;
+    }
+}
+
+class Guerrero extends Personaje {
+    puedePasar(casilla) {
+        if (casilla === "roca") return true;
+        return false;
     }
 }
 
@@ -62,15 +76,12 @@ class Juego {
 
         switch (casilla) {
             case "fuego":
-                if (jugador.personaje !== "Mago") {
-                    console.log(`${jugador.nombre}, no podés pasar el fuego.`);
-                    jugador.perderVida();
-                }
-                break;
             case "roca":
-                if (jugador.personaje !== "Guerrero") {
-                    console.log(`${jugador.nombre}, no podés mover la roca.`);
+                if (!jugador.puedePasar(casilla)) {
+                    console.log(`${jugador.nombre}, no podés pasar ${casilla}.`);
                     jugador.perderVida();
+                } else {
+                    console.log(`${jugador.nombre} pasó ${casilla} sin problemas.`);
                 }
                 break;
             case "monstruo":
@@ -97,18 +108,14 @@ class Juego {
         while (true) {
             const jugador = turno % 2 === 0 ? j1 : j2;
 
-            console.log(`\nTurno de ${jugador.nombre} (${jugador.personaje})`);
+            console.log(`\nTurno de ${jugador.nombre} (${jugador.constructor.name})`);
             prompt(`Presioná ENTER para tirar el dado...`);
             const pasos = tirarDado();
             console.log(`${jugador.nombre} sacó ${pasos}`);
             jugador.posicion += pasos;
 
             if (jugador.posicion >= this.tablero.length - 1) {
-                if (jugador.personaje === "Guerrero") {
-                    console.log(`${jugador.nombre} ganó. Jijija`);
-                } else {
-                    console.log(`${jugador.nombre} ganó. Muejeje`);
-                }
+                console.log(`${jugador.nombre} ganó.`);
                 break;
             }
 
@@ -118,18 +125,15 @@ class Juego {
     }
 }
 
-
 const prompt = require("prompt-sync")();
 
 const nombre1 = prompt("Jugador 1, nombre: ");
-let personaje1 = prompt("Elegí tu personaje (Mago/Guerrero): ");
-personaje1 = personaje1.charAt(0).toUpperCase() + personaje1.slice(1).toLowerCase();
+let tipo1 = prompt("Elegí tu personaje (Mago/Guerrero): ").toLowerCase();
 
-const personaje2 = personaje1 === "Mago" ? "Guerrero" : "Mago";
+let j1 = tipo1 === "mago" ? new Mago(nombre1) : new Guerrero(nombre1);
+
 const nombre2 = prompt("Jugador 2, nombre: ");
+let j2 = tipo1 === "mago" ? new Guerrero(nombre2) : new Mago(nombre2);
 
 const juego = new Juego();
-const j1 = new Jugador(nombre1, personaje1);
-const j2 = new Jugador(nombre2, personaje2);
-
 juego.jugar(j1, j2);
